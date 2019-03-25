@@ -20,9 +20,6 @@ ui <- dashboardPage(skin = "purple",
                 box(plotOutput("plot2", height = 250)),
                 box(plotOutput("mPlot", click = "plot_click",height = 500)),
                 verbatimTextOutput("info"),
-                selectInput("select", label = h3("Select box"), 
-                            choices = list("Choice 1" = women$HAVING_CHILDREN), 
-                            selected = women$HAVING_CHILDREN),
                 
                 box(
                   title = "Controls",
@@ -59,12 +56,11 @@ server <- function(input, output) {
   # Join data frame 'comb_mdata' to the map
   sPDF <- joinCountryData2Map(women, joinCode='ISO3', nameJoinColumn='country_code')
   
-  #selected
-  output$value <- renderPrint({ input$select })
+
   
   # Generate the Map 
   output$mPlot <- renderPlot({
-    mapParams <- mapPolys(sPDF, nameColumnToPlot=renderPrint(output$value), mapRegion='world',
+    mapParams <- mapPolys(sPDF, nameColumnToPlot="HAVING_CHILDREN", mapRegion='world',
                           missingCountryCol='dark grey', numCats=10, 
                           colourPalette=c('green4','green1','greenyellow','yellow','yellow2','orange','coral','red','red3','red4'),
                           #colourPalette=c('orchid','orchid1',' orchid2','magenta',' magenta1 ','magenta2 ','mediumorchid1',' mediumorchid2',' mediumorchid3',' mediumorchid4','hotpink4'),
