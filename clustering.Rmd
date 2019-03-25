@@ -1,0 +1,77 @@
+
+
+```{r}
+library(openxlsx)
+library(factoextra)
+library(cluster)
+library(fpc)
+library(NbClust)
+library(dplyr)
+```
+
+
+
+
+```{r}
+data <- read.csv("wbldata.csv")
+summary(data)
+attach(data)
+```
+
+```{r}
+hist(data$region)
+```
+
+```{r}
+barplot(table(GETTING.A.PENSION))
+boxplot(data$GETTING.A.PENSION~ HAVING_CHILDREN,ylab="having children", xlab="getting pension")
+```
+```{r}
+# Seleccionamos solo los datos numericos para clusterizar
+data_1<-select_if(data, is.numeric)
+```
+
+
+
+```{r}
+res<-NbClust(na.omit(data_1), diss=NULL, distance = "manhattan", min.nc=4, max.nc=20, 
+             method = "complete", index = "all") 
+
+fviz_nbclust(res) 
+#matriz de distancia previa, podemos mirar las variables mas separadas entre si y asi ver las dimensiones en las que dividir mejor
+```
+
+```{r}
+
+
+
+# clustering con K-means con k=4
+km.res <- eclust(na.omit(data_1), "kmeans", k = 4, nstart = 25, graph = FALSE)
+# Vemos los valores de los centroides
+km.res$centers
+
+# Dibujar gr?fica
+fviz_cluster(km.res, geom = "point", ellipse.type = "norm",
+             palette = "jco", ggtheme = theme_minimal())
+```
+
+```{r}
+# El segundo numero de clusters mas votado 
+# clustering con K-means
+km.res_1 <- eclust(na.omit(data_1), "kmeans", k = 11, nstart = 25, graph = FALSE)
+# Vemos los valores de los centroides
+km.res$centers
+fviz_cluster(km.res_1, geom = "point", ellipse.type = "norm",
+             palette = "jco", ggtheme = theme_minimal())
+```
+
+
+```{r}
+# clustering jer?rquico
+hc.res <- eclust(data_1, "hclust", k = 4, hc_metric = "euclidean", 
+                 hc_method = "ward.D2", graph = FALSE)
+
+# Dibujar gr?fica
+fviz_dend(hc.res, show_labels = FALSE,
+          palette = "jco", as.ggplot = TRUE)
+```
