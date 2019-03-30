@@ -17,6 +17,213 @@ mi_moda<-function(var){
 }
 
 
+#Association rules
+datos_na <- women[is.na(women$global_index),]
+datos_no_na <- setdiff(women, datos_na)
+
+year_2018 <- datos_no_na %>% filter(year %in% c(2018))
+year_2009 <- datos_no_na %>% filter(year %in% c(2009))
+
+
+year_2018 <- year_2018 %>% filter(!(country_code=="SSD"))
+year_2018$improvement<- year_2018$global_index - year_2009$global_index
+year_2018$global_index_2009 <- year_2009$global_index
+
+involutionaring_countries <- women %>% filter(country_code %in% c("BHR","UZB","SVN"))
+highest_evolution_countries <-year_2018 %>% select(one_of("country_code","country","improvement")) %>% arrange(improvement,desc(country)) %>% top_n(5)
+datos_highest_evolution_countries <- women %>% filter(country_code %in% highest_evolution_countries$country_code)
+
+#involutionaring
+rem_cols <- c("country", "country_code")
+data_2018_for_ar <- involutionaring_countries %>% select_if(negate(is.numeric)) %>% select(-one_of(rem_cols))
+cols_dummies <- data_2018_for_ar %>% select(region,income_group) %>% dummy_cols() %>% select(-one_of(c("region","income_group")))
+data_2018_for_ar <- data_2018_for_ar %>% select(-one_of(c("region","income_group")))
+data_2018_for_ar_01 <- copy(data_2018_for_ar)
+for (c in names(data_2018_for_ar)){
+  data_2018_for_ar_01[c] <- ifelse(data_2018_for_ar[c] == "Yes", 1, 0)
+}
+data_2018_for_ar <- data_2018_for_ar_01
+data_2018_for_ar <- bind_cols(cols_dummies, data_2018_for_ar)
+data_2018_for_ar_matrix <- data.matrix(data_2018_for_ar)
+trans <-  as(data_2018_for_ar_matrix, "transactions")
+gc()
+association.rules <- apriori(trans, parameter = list(supp=0.7, conf=0.7, maxlen=11, minlen=5), control = list(memopt = TRUE,load = FALSE))
+rules <- association.rules[!is.redundant(association.rules)]
+
+rules_travelabroadasman_involutioning <- subset(rules, subset= rhs %in% "travel_abroad_as_man")
+rules_travelabroadasman_involutioning_head <- head(rules_travelabroadasman_involutioning, n = 5, by = "lift")
+rules_travelabroadasman_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_travelabroadasman_involutioning_head) ), 
+                                                             rhs = labels( rhs(rules_travelabroadasman_involutioning_head) ), 
+                                                             quality(rules_travelabroadasman_involutioning_head) )[ order(-lift), ]
+
+
+rules_traveloutsidehomeasman_involutioning <- subset(rules, subset= rhs %in% "travel_outside_home_as_man")
+rules_traveloutsidehomeasman_involutioning_head <- head(rules_traveloutsidehomeasman_involutioning, n = 5, by = "lift")
+rules_traveloutsidehomeasman_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_traveloutsidehomeasman_involutioning_head) ), 
+                                                             rhs = labels( rhs(rules_traveloutsidehomeasman_involutioning_head) ), 
+                                                             quality(rules_traveloutsidehomeasman_involutioning_head) )[ order(-lift), ]
+
+
+
+rules_nloh_involutioning <- subset(rules, subset= rhs %in% "no_law_obedience_to_husband")
+rules_nloh_involutioning_head <- head(rules_nloh_involutioning, n = 5, by = "lift")
+rules_nloh_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_nloh_involutioning_head) ), 
+                                                rhs = labels( rhs(rules_nloh_involutioning_head) ), 
+                                                quality(rules_nloh_involutioning_head) )[ order(-lift), ]
+
+
+
+rules_fdp_involutioning <- subset(rules, subset= rhs %in% "forbidden_dismiss_pregnant")
+rules_fdp_involutioning_head <- head(rules_fdp_involutioning, n = 5, by = "lift")
+rules_fdp_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_fdp_involutioning_head) ), 
+                                               rhs = labels( rhs(rules_fdp_involutioning_head) ), 
+                                               quality(rules_fdp_involutioning_head) )[ order(-lift), ]
+
+
+rules_sc_involutioning <- subset(rules, subset= rhs %in% "sign_contract_as_man")
+rules_sc_involutioning_head <- head(rules_sc_involutioning, n = 5, by = "lift")
+rules_sc_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_sc_involutioning_head) ), 
+                                              rhs = labels( rhs(rules_sc_involutioning_head) ), 
+                                              quality(rules_sc_involutioning_head) )[ order(-lift), ]
+
+rules_rb_involutioning <- subset(rules, subset= rhs %in% "register_business_as_man")
+rules_rb_involutioning_head <- head(rules_rb_involutioning, n = 5, by = "lift")
+rules_rb_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_rb_involutioning_head) ), 
+                                              rhs = labels( rhs(rules_rb_involutioning_head) ), 
+                                              quality(rules_rb_involutioning_head) )[ order(-lift), ]
+
+rules_oba_involutioning <- subset(rules, subset= rhs %in% "open_bankaccount_as_man")
+rules_oba_involutioning_head <- head(rules_oba_involutioning, n = 5, by = "lift")
+rules_oba_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_oba_involutioning_head) ), 
+                                               rhs = labels( rhs(rules_oba_involutioning_head) ), 
+                                               quality(rules_oba_involutioning_head) )[ order(-lift), ]
+
+rules_mcseo_involutioning <- subset(rules, subset= rhs %in% "married_couple_same_equal_ownership")
+rules_mcseo_involutioning_head <- head(rules_mcseo_involutioning, n = 5, by = "lift")
+rules_mcseo_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_mcseo_involutioning_head) ), 
+                                                 rhs = labels( rhs(rules_mcseo_involutioning_head) ), 
+                                                 quality(rules_mcseo_involutioning_head) )[ order(-lift), ]
+
+
+rules_mceaa_involutioning <- subset(rules, subset= rhs %in% "married_couple_equal_administrative_authority")
+rules_mceaa_involutioning_head <- head(rules_mceaa_involutioning, n = 5, by = "lift")
+rules_mceaa_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_mceaa_involutioning_head) ), 
+                                                 rhs = labels( rhs(rules_mceaa_involutioning_head) ), 
+                                                 quality(rules_mceaa_involutioning_head) )[ order(-lift), ]
+
+
+rules_pprsa_involutioning <- subset(rules, subset= rhs %in% "partialpension_retire_same_ages_as_man")
+rules_pprsa_involutioning_head <- head(rules_pprsa_involutioning, n = 5, by = "lift")
+rules_pprsa_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_pprsa_involutioning_head) ), 
+                                                 rhs = labels( rhs(rules_pprsa_involutioning_head) ), 
+                                                 quality(rules_pprsa_involutioning_head) )[ order(-lift), ]
+
+
+rules_mrae_involutioning <- subset(rules, subset= rhs %in% "mandatory_retirement_age_equal")
+rules_mrae_involutioning_head <- head(rules_mrae_involutioning, n = 5, by = "lift")
+rules_mrae_involutioning_head_dt <- data.table( lhs = labels( lhs(rules_mrae_involutioning_head) ), 
+                                                rhs = labels( rhs(rules_mrae_involutioning_head) ), 
+                                                quality(rules_mrae_involutioning_head) )[ order(-lift), ]
+
+
+#evolutioning
+rem_cols <- c("country", "country_code")
+data_2018_for_ar <- datos_highest_evolution_countries %>% select_if(negate(is.numeric)) %>% select(-one_of(rem_cols))
+cols_dummies <- data_2018_for_ar %>% select(region,income_group) %>% dummy_cols() %>% select(-one_of(c("region","income_group")))
+data_2018_for_ar <- data_2018_for_ar %>% select(-one_of(c("region","income_group")))
+data_2018_for_ar_01 <- copy(data_2018_for_ar)
+for (c in names(data_2018_for_ar)){
+  data_2018_for_ar_01[c] <- ifelse(data_2018_for_ar[c] == "Yes", 1, 0)
+}
+data_2018_for_ar <- data_2018_for_ar_01
+data_2018_for_ar <- bind_cols(cols_dummies, data_2018_for_ar)
+data_2018_for_ar_matrix <- data.matrix(data_2018_for_ar)
+trans <-  as(data_2018_for_ar_matrix, "transactions")
+gc()
+association.rules <- apriori(trans, parameter = list(supp=0.7, conf=0.7, maxlen=11, minlen=5), control = list(memopt = TRUE,load = FALSE))
+
+rules <- association.rules[!is.redundant(association.rules)]
+
+rules_travelabroadasman_evol <- subset(rules, subset= rhs %in% "travel_abroad_as_man")
+rules_travelabroadasman_evol_head <- head(rules_travelabroadasman_evol, n = 5, by = "lift")
+rules_travelabroadasman_evol_head_dt <- data.table( lhs = labels( lhs(rules_travelabroadasman_evol_head) ), 
+                                                    rhs = labels( rhs(rules_travelabroadasman_evol_head) ), 
+                                                    quality(rules_travelabroadasman_evol_head) )[ order(-lift), ]
+
+
+rules_traveloutsidehomeasman_evol <- subset(rules, subset= rhs %in% "travel_outside_home_as_man")
+rules_traveloutsidehomeasman_evol_head <- head(rules_traveloutsidehomeasman_evol, n = 5, by = "lift")
+rules_traveloutsidehomeasman_evol_head_dt <- data.table( lhs = labels( lhs(rules_traveloutsidehomeasman_evol_head) ), 
+                                                    rhs = labels( rhs(rules_traveloutsidehomeasman_evol_head) ), 
+                                                    quality(rules_traveloutsidehomeasman_evol_head) )[ order(-lift), ]
+
+
+
+rules_nloh_evol <- subset(rules, subset= rhs %in% "no_law_obedience_to_husband")
+rules_nloh_evol_head <- head(rules_nloh_evol, n = 5, by = "lift")
+rules_nloh_evol_head_dt <- data.table( lhs = labels( lhs(rules_nloh_evol_head) ), 
+                                       rhs = labels( rhs(rules_nloh_evol_head) ), 
+                                       quality(rules_nloh_evol_head) )[ order(-lift), ]
+
+
+
+rules_fdp_evol <- subset(rules, subset= rhs %in% "forbidden_dismiss_pregnant")
+rules_fdp_evol_head <- head(rules_fdp_evol, n = 5, by = "lift")
+rules_fdp_evol_head_dt <- data.table( lhs = labels( lhs(rules_fdp_evol_head) ), 
+                                      rhs = labels( rhs(rules_fdp_evol_head) ), 
+                                      quality(rules_fdp_evol_head) )[ order(-lift), ]
+
+
+rules_sc_evol <- subset(rules, subset= rhs %in% "sign_contract_as_man")
+rules_sc_evol_head <- head(rules_sc_evol, n = 5, by = "lift")
+rules_sc_evol_head_dt <- data.table( lhs = labels( lhs(rules_sc_evol_head) ), 
+                                     rhs = labels( rhs(rules_sc_evol_head) ), 
+                                     quality(rules_sc_evol_head) )[ order(-lift), ]
+
+rules_rb_evol <- subset(rules, subset= rhs %in% "register_business_as_man")
+rules_rb_evol_head <- head(rules_rb_evol, n = 5, by = "lift")
+rules_rb_evol_head_dt <- data.table( lhs = labels( lhs(rules_rb_evol_head) ), 
+                                     rhs = labels( rhs(rules_rb_evol_head) ), 
+                                     quality(rules_rb_evol_head) )[ order(-lift), ]
+
+rules_oba_evol <- subset(rules, subset= rhs %in% "open_bankaccount_as_man")
+rules_oba_evol_head <- head(rules_oba_evol, n = 5, by = "lift")
+rules_oba_evol_head_dt <- data.table( lhs = labels( lhs(rules_oba_evol_head) ), 
+                                      rhs = labels( rhs(rules_oba_evol_head) ), 
+                                      quality(rules_oba_evol_head) )[ order(-lift), ]
+
+rules_mcseo_evol <- subset(rules, subset= rhs %in% "married_couple_same_equal_ownership")
+rules_mcseo_evol_head <- head(rules_mcseo_evol, n = 5, by = "lift")
+rules_mcseo_evol_head_dt <- data.table( lhs = labels( lhs(rules_mcseo_evol_head) ), 
+                                        rhs = labels( rhs(rules_mcseo_evol_head) ), 
+                                        quality(rules_mcseo_evol_head) )[ order(-lift), ]
+
+
+rules_mceaa_evol <- subset(rules, subset= rhs %in% "married_couple_equal_administrative_authority")
+rules_mceaa_evol_head <- head(rules_mceaa_evol, n = 5, by = "lift")
+rules_mceaa_evol_head_dt <- data.table( lhs = labels( lhs(rules_mceaa_evol_head) ), 
+                                        rhs = labels( rhs(rules_mceaa_evol_head) ), 
+                                        quality(rules_mceaa_evol_head) )[ order(-lift), ]
+
+
+rules_pprsa_evol <- subset(rules, subset= rhs %in% "partialpension_retire_same_ages_as_man")
+rules_pprsa_evol_head <- head(rules_pprsa_evol, n = 5, by = "lift")
+rules_pprsa_evol_head_dt <- data.table( lhs = labels( lhs(rules_pprsa_evol_head) ), 
+                                        rhs = labels( rhs(rules_pprsa_evol_head) ), 
+                                        quality(rules_pprsa_evol_head) )[ order(-lift), ]
+
+
+rules_mrae_evol <- subset(rules, subset= rhs %in% "mandatory_retirement_age_equal")
+rules_mrae_evol_head <- head(rules_mrae_evol, n = 5, by = "lift")
+rules_mrae_evol_head_dt <- data.table( lhs = labels( lhs(rules_mrae_evol_head) ), 
+                                       rhs = labels( rhs(rules_mrae_evol_head) ), 
+                                       quality(rules_mrae_evol_head) )[ order(-lift), ]
+
+
+
+# ----------------------------------------------------------------------------------
+
+
 ui <- dashboardPage(skin = "blue",
   dashboardHeader(title = "Gender Equality Study"),
   ## Sidebar content
@@ -26,6 +233,7 @@ ui <- dashboardPage(skin = "blue",
       menuItem("Global women mean", tabName = "Global", icon = icon("venus")),
       menuItem("Distributions", tabName = "Distributions", icon = icon("venus")),
       menuItem("Improvements and Worsening", tabName = "ImpandWors", icon = icon("venus")),
+      menuItem("Association rules", tabName = "AssRul", icon = icon("venus")),
       menuItem("Widgets", tabName = "widgets", icon = icon("th"))
     )
   ),
@@ -299,7 +507,276 @@ ui <- dashboardPage(skin = "blue",
               
               
               
-            )
+            ),
+      
+        tabItem(tabName = "AssRul",
+                fluidRow(
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Can a woman legally travel abroad in the same way as a man?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar1i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar1e"))
+                    )
+                    
+                  ),
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Can a woman legally travel outside the country in the same way as a man?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar2i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar2e"))
+                    )
+                    
+                  ),
+                  
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Is a married woman not legally required to obey her husband?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar3i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar3e"))
+                    )
+                    
+                  ),
+                  
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Is dismissal of pregnant workers prohibited?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar4i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar4e"))
+                    )
+                    
+                  ),
+                  
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Can a woman legally sign a contract in the same way as a man?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar5i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar5e"))
+                    )
+                    
+                  ),
+                  
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Can a woman legally register a business in the same way as a  man?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar6i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar6e"))
+                    )
+                    
+                  ),
+                  
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Can a  woman legally open a bank account in the same way as a man?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar7i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar7e"))
+                    )
+                    
+                  ),
+                  
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Do men and married women have equal ownership rights to property?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar8i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar8e"))
+                    )
+                    
+                  ),
+                  
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Does the law grant spouses equal administrative authority over assets during marriage?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar9i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar9e"))
+                    )
+                    
+                  ),
+                  
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Are the ages at which men and women can retire with partial pension benefits equal?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar10i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar10e"))
+                    )
+                    
+                  ),
+                  
+                  box(
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width=1050,
+                    title= "Association rules for: Is the mandatory retirement age for men and women equal?",
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Involutioning countries",
+                      div(style = 'overflow-x: scroll', tableOutput("ar11i"))
+                    ),
+                    
+                    box(
+                      status="info",
+                      solidHeader = TRUE,
+                      width=1050,
+                      title = "Countries with a best evolution",
+                      div(style = 'overflow-x: scroll', tableOutput("ar11e"))
+                    )
+                    
+                  )
+                  
+                )
+                
+        )
     
       
       )
@@ -318,6 +795,96 @@ server <- function(input, output) {
     womenS <- women$year[seq_len(input$slider2)]
     hist(women$GOING_PLACES)
   })
+  
+  output$ar1i <-renderTable({
+    return(rules_travelabroadasman_involutioning_head_dt)
+  })
+  
+  output$ar1e <-renderTable({
+    return(rules_travelabroadasman_evol_head_dt)
+  })
+  
+  output$ar2i <-renderTable({
+    return(rules_traveloutsidehomeasman_involutioning_head_dt)
+  })
+  
+  output$ar2e <-renderTable({
+    return(rules_traveloutsidehomeasman_evol_head_dt)
+  })
+  
+  output$ar3i <-renderTable({
+    return(rules_nloh_involutioning_head_dt)
+  })
+  
+  output$ar3e <-renderTable({
+    return(rules_nloh_evol_head_dt)
+  })
+  
+  output$ar4i <-renderTable({
+    return(rules_fdp_involutioning_head_dt)
+  })
+  
+  output$ar4e <-renderTable({
+    return(rules_fdp_evol_head_dt)
+  })
+  
+  output$ar5i <-renderTable({
+    return(rules_sc_involutioning_head_dt)
+  })
+  
+  output$ar5e <-renderTable({
+    return(rules_sc_evol_head_dt)
+  })
+  
+  output$ar6i <-renderTable({
+    return(rules_rb_involutioning_head_dt)
+  })
+  
+  output$ar6e <-renderTable({
+    return(rules_rb_evol_head_dt)
+  })
+  
+  output$ar7i <-renderTable({
+    return(rules_oba_involutioning_head_dt)
+  })
+  
+  output$ar7e <-renderTable({
+    return(rules_oba_evol_head_dt)
+  })
+  
+  output$ar8i <-renderTable({
+    return(rules_mcseo_involutioning_head_dt)
+  })
+  
+  output$ar8e <-renderTable({
+    return(rules_mcseo_evol_head_dt)
+  })
+  
+  output$ar9i <-renderTable({
+    return(rules_mceaa_involutioning_head_dt)
+  })
+  
+  output$ar9e <-renderTable({
+    return(rules_mceaa_evol_head_dt)
+  })
+  
+  output$ar10i <-renderTable({
+    return(rules_pprsa_involutioning_head_dt)
+  })
+  
+  output$ar10e <-renderTable({
+    return(rules_pprsa_evol_head_dt)
+  })
+  
+  
+  output$ar11i <-renderTable({
+    return(rules_mrae_involutioning_head_dt)
+  })
+  
+  output$ar11e <-renderTable({
+    return(rules_mrae_evol_head_dt)
+  })
+  
   
   output$dfshape <- renderInfoBox({
     valueBox(
