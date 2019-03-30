@@ -7,8 +7,11 @@ library("Matrix")
 library(data.table)
 library(fastDummies)
 library(plyr)
+library(arules)
+library(arulesViz)
 
 women <- read.csv("wbldata.csv")
+
 
 mi_moda<-function(var){
   frec.var<-table(var)
@@ -21,11 +24,11 @@ mi_moda<-function(var){
 datos_na <- women[is.na(women$global_index),]
 datos_no_na <- setdiff(women, datos_na)
 
-year_2018 <- datos_no_na %>% filter(year %in% c(2018))
-year_2009 <- datos_no_na %>% filter(year %in% c(2009))
-
+year_2018 <- datos_no_na %>% filter(year %in% c(2018)) %>% filter(!(country_code=="SSD"))
+year_2009 <- datos_no_na %>% filter(year %in% c(2009)) %>% filter(!(country_code=="SSD"))
 
 year_2018 <- year_2018 %>% filter(!(country_code=="SSD"))
+
 year_2018$improvement<- year_2018$global_index - year_2009$global_index
 year_2018$global_index_2009 <- year_2009$global_index
 
@@ -1140,8 +1143,9 @@ server <- function(input, output) {
     datos_na <- women[is.na(women$global_index),]
     datos_no_na <- setdiff(women, datos_na)
     
-    year_2018 <- datos_no_na %>% filter(year %in% c(2018))
-    year_2009 <- datos_no_na %>% filter(year %in% c(2009))
+    year_2018 <- datos_no_na %>% filter(year %in% c(2018)) %>% filter(!(country_code=="SSD"))
+    year_2009 <- datos_no_na %>% filter(year %in% c(2009)) %>% filter(!(country_code=="SSD"))
+    
     year_2018 <- year_2018 %>% filter(!(country_code=="SSD"))
     
     year_2018$improvement<- year_2018$global_index - year_2009$global_index
@@ -1224,8 +1228,8 @@ server <- function(input, output) {
     datos_na <- women[is.na(women$global_index),]
     datos_no_na <- setdiff(women, datos_na)
     
-    year_2009 <- datos_no_na %>% filter(year %in% c(2009))
-    year_2018 <- datos_no_na %>% filter(year %in% c(input$sliderboxplot2))
+    year_2018 <- datos_no_na %>% filter(year %in% c(input$sliderboxplot2)) %>% filter(!(country_code=="SSD"))
+    year_2009 <- datos_no_na %>% filter(year %in% c(2009)) %>% filter(!(country_code=="SSD"))
     
     year_2018[!(year_2018$country %in% year_2009$country),]
     
@@ -1249,8 +1253,8 @@ server <- function(input, output) {
     datos_na <- women[is.na(women$global_index),]
     datos_no_na <- setdiff(women, datos_na)
     
-    year_2009 <- datos_no_na %>% filter(year %in% c(2009))
-    year_2018 <- datos_no_na %>% filter(year %in% c(input$sliderboxplot2))
+    year_2018 <- datos_no_na %>% filter(year %in% c(input$sliderboxplot2)) %>% filter(!(country_code=="SSD"))
+    year_2009 <- datos_no_na %>% filter(year %in% c(2009)) %>% filter(!(country_code=="SSD"))
     
     year_2018[!(year_2018$country %in% year_2009$country),]
     
