@@ -1,0 +1,99 @@
+---
+title: "Gender Equity Study"
+author: "Rafael Vergara"
+date: "27 de marzo de 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+```{r cars}
+#install.packages('scales')
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+```
+
+## Including Plots
+
+
+
+```{r pressure, echo=FALSE}
+gender <- read_csv("wbldata-sinNAN.csv")
+```
+En nuestro dataset tenemos un total de 35 leyes que regulan la igualdad entre hombres y mujeres agrupadas en 8 categorías:
+ * GOING_PLACES => Restricción de libertad de movimiento
+ * STARTING A JOB => Regulación de leyes que afectan decisión de trabajo
+ * GETTING PAID => Leyes y regulaciones de salario para la mujer
+ * GETTING MARRIED => Restricciones legales en el matrimonio
+ * HAVING_CHILDREN => Leyes de trabajo cuando la mujer ha tenido un hijo.
+ * RUNNING BUSINESS => Restricciones mujer inicio o dirige negocio.
+ * MANAGING ASSETS => Diferencia de genero propiedad y herencia.
+ * GETTING A PENSION => Leyes que regulan la pensión de la mujer.
+
+# Evolución de las leyes que regulan la equidad entre hombres y mujeres en los últimos 10 años
+Vamos a visualizar cuál ha sido la evolución por regiones continentales en los últimos 10 años, para poder sacar conclusiones al respecto.
+
+
+```{r pressure, echo=FALSE}
+by_continent_2009_2018 <- gender %>%
+  select(region, year, global_index) %>%
+  filter(year == 2009 | year == 2018) %>%
+  group_by(region, year) %>%
+  summarize(meanGlobal = mean(global_index))
+
+head(by_continent_2009)
+
+
+ggplot(by_continent_2009_2018, aes(x=region,y=meanGlobal,fill=factor(year)))+
+  geom_bar(stat="identity",position="dodge")+
+  geom_text(aes(label= round(meanGlobal, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25)+
+  scale_fill_discrete(name="Año",
+                      breaks=c(1, 2),
+                      labels=c("2009", "2018"))+
+  xlab("Regiones")+ylab("Porcentaje medio")
+```
+
+Diferencias en porcentajes:
+ * Asia del Este y Pacífico => 5.93
+ * Europa y Asia Central => 4.57
+ * Paises en la OECD => 3.58
+ * Latino América y Caribe => 3.69
+ * Medio Este y Norte de África => 2.86
+ * Asia del Sur => 8.36
+ * África subsahariana => 5.98
+ 
+ Con los datos anteriores podemos decir que la región que más ha crecido en derechos para la mujer ha sido Asia del Sur, con un aumento del 8.36 puntos. Aumento todavía le quedan muchas políticas de igualdad que implantar con respecto a los países de la OECD.
+ Los países de la de Medio Este y Norte de África son los que tuvieron el menor aumento en 10 años, únicamente 2.89 puntos por lo que aumenta la diferencia entre las demás regiones.
+
+
+
+## Mejores y peores políticas de igualdad
+
+
+
+```{r}
+by_continent2018 <- gender %>%
+  select(region, year, global_index) %>%
+  filter(year == 2018) %>%
+  group_by(region)
+
+head(by_continent2018)
+
+ggplot(by_continent2018, aes(x = region, y = global_index)) +
+  stat_boxplot(geom ='errorbar') + 
+  geom_boxplot()+
+  xlab("Regiones")+ylab("Porcentaje medio 2018")
+```
+
+Los países que se encuentran en la OECD son los que mejores políticas de igualdad tienen con respecto a las otras regiones, ya que podemos ver en el gráfico que es el que más se aproxima su media al 100%. También podemos ver que hay paises dentro de la OECD que tienen valores outlier por la zona inferior, por lo que sus políticas de igualdad están muy por debajo de la media.
+
+En el extremo contrario, vemos que la región de Medio Este y Norte de África son las que peores medias registran, aunque hay países que superan el 90% dentro de esta región.
+
