@@ -41,6 +41,14 @@ Countries = df$country_code
 Countries_2<-unique(Countries)
 ## eliminacion de less_income_group
 df_less_income_group <- df[,-2]
+
+```
+
+```{r}
+## columna de paises 
+countriesNames = datos$country
+## Sin repetidos
+Countries_3<-unique(countriesNames)
 ```
 
 
@@ -51,7 +59,7 @@ df_less_income_group <- df[,-2]
 ```{r}
 mapByRegion(df_less_income_group, nameDataColumn="HAVING_CHILDREN", joinCode="ISO3", 
             nameJoinColumn="country_code", regionType="Stern", FUN="mean")
-
+df_less_income_group
 ```
 
 ```{r}
@@ -59,4 +67,27 @@ mapByRegion(df_less_income_group, nameDataColumn="RUNNING BUSINESS", joinCode="I
             nameJoinColumn="country_code", regionType="Stern", FUN="mean")
 
 ```
+```{r}
+#cluster y mapas
+datos_cluster <- read_csv("/home/isa/Escritorio/holi.csv")
+attach(datos_cluster)
+datos_cluster
+mapByRegion(datos_cluster, nameDataColumn="Kmeans_2009", joinCode="ISO3", 
+            nameJoinColumn="country_code.o.", regionType="Stern", FUN="mean")
 
+
+
+sPDF <- joinCountryData2Map(datos_cluster,
+                            joinCode = "ISO3",
+                            nameJoinColumn = "country_code.o.",
+                            verbose = TRUE)
+
+ mapParams <- mapPolys(sPDF, nameColumnToPlot="Kmeans_2009", mapRegion='world',
+                          missingCountryCol='dark grey', catMethod=c(0,1,2,3,4),
+                          colourPalette=c('green4','green1','greenyellow','yellow','yellow2','orange','coral','red','red3','red4','orchid','orchid1',' orchid2','magenta'),
+                          #colourPalette=c('orchid','orchid1',' orchid2','magenta',' magenta1 ','magenta2 ','mediumorchid1',' mediumorchid2',' mediumorchid3',' mediumorchid4','hotpink4'),
+                          addLegend=TRUE,
+                          oceanCol='light blue')
+    mtext("[Grey Color: No Data Available]",side=1,line=-1)
+
+```

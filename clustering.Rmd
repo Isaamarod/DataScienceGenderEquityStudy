@@ -7,6 +7,8 @@ library(cluster)
 library(fpc)
 library(NbClust)
 library(dplyr)
+library(tidyverse)  # data manipulation
+
 ```
 
 
@@ -47,11 +49,12 @@ fviz_nbclust(res)
 
 # clustering con K-means con k=4
 km.res <- eclust(na.omit(data_1), "kmeans", k = 4, nstart = 25, graph = FALSE)
+km.res 
 # Vemos los valores de los centroides
 km.res$centers
 
 # Dibujar gr?fica
-fviz_cluster(km.res, geom = "point", ellipse.type = "norm",
+fviz_cluster(km.res, geom = "point", ellipse.type = "norm", 
              palette = "jco", ggtheme = theme_minimal())
 ```
 
@@ -75,3 +78,82 @@ hc.res <- eclust(data_1, "hclust", k = 4, hc_metric = "euclidean",
 fviz_dend(hc.res, show_labels = FALSE,
           palette = "jco", as.ggplot = TRUE)
 ```
+
+
+```{r}
+##Pintar los paises en el clustering
+## columna de paises 
+countriesNames = data$country
+## Sin repetidos
+Countries_3<-unique(countriesNames)
+```
+
+```{r}
+set.seed(2017)
+rownames(data_1) = data_1$country
+PAM3 =pam(na.omit(data_1),4)
+
+clusplot(PAM3, labels=4, lines=0)
+```
+##matriz de distancia
+
+distance <- get_dist(df$year=="2009")
+fviz_dist(distance, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+
+
+
+```{r}
+
+
+
+# clustering con K-means con k=4
+km.res <- eclust(na.omit(data_1), "kmeans", k = 4, nstart = 25, graph = FALSE)
+km.res 
+# Vemos los valores de los centroides
+km.res$centers
+
+# Dibujar gr?fica
+fviz_cluster(km.res, geom = "point", ellipse.type = "norm", 
+             palette = "jco", ggtheme = theme_minimal())
+```
+
+```{r}
+
+write.csv(df, file = "/home/isa/Escritorio/DF.csv", row.names = TRUE)
+DF_prueba_clustering <- read.csv("/home/isa/Escritorio/DF_prueba_clustering.csv")
+DF_prueba_clustering_year_2009=subset(DF_prueba_clustering,year=="2009")
+#eliminamos sudan del sur por falta de datos
+DF_prueba_clustering_year_2009 <- DF_prueba_clustering_year_2009[-c(187), ] 
+na.omit(DF_prueba_clustering_year_2009)
+
+set.seed(123456789)
+kmeans_2009 <- kmeans(na.omit(DF_prueba_clustering_year_2009[,c("GETTING_MARRIED","HAVING_CHILDREN")]), centers=4, nstart=10)
+kmeans_2009
+ o=order(kmeans_2009$cluster)
+ o
+holi= data.frame(DF_prueba_clustering_year_2009$country_code[o],kmeans_2009$cluster[o])
+write.csv(holi, file = "/home/isa/Escritorio/holi.csv", row.names = TRUE)
+
+
+fviz_cluster(kmeans_2009, labels=DF_prueba_clustering_year_2009$country_code,geom = "point", ellipse.type = "norm", 
+             palette = "jco", ggtheme = theme_minimal())
+```
+
+```{r}
+row.names(DF_prueba_clustering_year_2009) <- DF_prueba_clustering_year_2009$country_code # Declare column 1 as the row names
+dist(as.matrix(DF_prueba_clustering_year_2009)) -> d # And then your routine
+hc <- hclust(d)
+plot(hc)
+```
+
+```{r}
+countries = c(DF_prueba_clustering_year_2009$country_code)
+countries
+Data = data.frame(countries, DF_prueba_clustering_year_2009[2:9])
+Data
+row.names(Data) <- countries # Declare column 1 as the row names
+PAM3 =pam(na.omit(Data), 4)
+clusplot(PAM3, labels=4, lines=0)
+```
+
+
