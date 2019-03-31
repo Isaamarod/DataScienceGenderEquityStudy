@@ -97,3 +97,29 @@ Los países que se encuentran en la OECD son los que mejores políticas de igual
 
 En el extremo contrario, vemos que la región de Medio Este y Norte de África son las que peores medias registran, aunque hay países que superan el 90% dentro de esta región.
 
+```{r}
+datos_na <- gender[is.na(gender$global_index),]
+    datos_no_na <- setdiff(gender, datos_na)
+    
+    year_2009 <- datos_no_na %>% filter(year %in% c(2009))
+    year_2018 <- datos_no_na %>% filter(year %in% c(2018))
+    
+    year_2018[!(year_2018$country %in% year_2009$country),]
+    
+    #year_2018 <- year_2018 %>% filter(!(country_code=="SSD"))
+    year_2018$improvement<- year_2018$HAVING_CHILDREN - year_2009$HAVING_CHILDREN
+    year_2018$global_index_2009 <- year_2009$HAVING_CHILDREN
+    
+    for_improvement_plot <-tibble :: tibble(country = year_2018$country,global_index_selectedyear=year_2018$global_index_2009, global_index_2018 = year_2018$HAVING_CHILDREN, region=year_2018$region)
+    
+    
+    df <- for_improvement_plot %>% filter(region=="Europe & Central Asia") %>% select(-one_of(c("region"))) %>% mutate(direction = ifelse(global_index_2018 - global_index_selectedyear >0, "up", "down")) %>% melt(id=c("country","direction"))
+    
+    df%>%select(one_of(c("country","variable","value")))
+```
+
+
+
+
+
+

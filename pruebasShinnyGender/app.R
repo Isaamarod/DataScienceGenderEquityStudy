@@ -7,6 +7,7 @@ library("Matrix")
 library(data.table)
 library(fastDummies)
 library(plyr)
+library(dplyr)
 
 women <- read.csv("wbldata.csv")
 
@@ -296,6 +297,13 @@ ui <- dashboardPage(skin = "blue",
                                       dataTableOutput("tabimprov")
                                       
                                   )
+                                ),
+                                fluidRow(
+                                  status = "primary",
+                                  solidHeader = TRUE,
+                                  width=1050,
+                                  title= "Countries that have improved the most",
+                                  box(dataTableOutput("laws"))
                                 )
                                 
                                 
@@ -308,7 +316,7 @@ ui <- dashboardPage(skin = "blue",
                                   box(title="Years controls",
                                       solidHeader = TRUE,
                                       status = "warning",
-                                      sliderInput("sliderboxplot2", "Select one year:", 2009,2018,2013))
+                                      sliderInput("sliderboxplotlaw", "Select one year:", 2009,2018,2013))
                                 ),
                                 
                                 fluidRow(
@@ -318,7 +326,7 @@ ui <- dashboardPage(skin = "blue",
                                     solidHeader = TRUE,
                                     width = 1050,
                                     title="Improvement arrows",
-                                    plotOutput("arrows"),
+                                    plotOutput("arrowsLaw"),
                                     
                                     
                                     box(
@@ -327,61 +335,39 @@ ui <- dashboardPage(skin = "blue",
                                       solidHeader = TRUE,
                                       status = "warning",
                                       
-                                      box(radioButtons("radioB", "Select one region to inspect: ", c("Going Places" = "GOING PLACES",
-                                                                                                     "Starting a job" = "STARTING A JOB",
-                                                                                                     "Getting married" = "GETTING MARRIED",
-                                                                                                     "Having children" = "HAVING_CHILDREN",
-                                                                                                     "Running Business" = "RUNNING BUSINESS",
-                                                                                                     "Managing assets" = "MANAGING ASSETS",
-                                                                                                     "Getting a pension" = "GETTING A PENSION"))),
+                                      box(selectInput("selectLaw", label = "Select a law", 
+                                                      choices = list("Going Places" = "GOING PLACES",
+                                                                     "Starting a job" = "STARTING A JOB",
+                                                                     "Getting married" = "GETTING MARRIED",
+                                                                     "Having children" = "HAVING_CHILDREN",
+                                                                     "Running Business" = "RUNNING BUSINESS",
+                                                                     "Managing assets" = "MANAGING ASSETS",
+                                                                     "Getting a pension" = "GETTING A PENSION"), 
+                                                      selected = "Getting married"),
+                                          
+                                          box(dataTableOutput("laws"))
+                                          
+                                      )),
+                                    box(
+                                      width = 600,
+                                      title="Region Selection",
+                                      solidHeader = TRUE,
+                                      status = "warning",
+                                      
+                                      box(radioButtons("radioRegion", "Select one region to inspect: ", c("East Asia & Pacific" = "East Asia & Pacific",
+                                                                                                          "Europe & Central Asia" = "Europe & Central Asia",
+                                                                                                          "High income: OECD" = "High income: OECD",
+                                                                                                          "Latin America & Caribbean" = "Latin America & Caribbean",
+                                                                                                          "Middle East & North Africa" = "Middle East & North Africa",
+                                                                                                          "South Asia" = "South Asia",
+                                                                                                          "Sub-Saharan Africa" = "Sub-Saharan Africa"))),
                                       box(dataTableOutput("tabarrows"))
                                       
                                     )
-                                    
-                                  )
-                                  
-                                ),
-                                
-                                fluidRow(
-                                  
-                                  box(status = "primary",
-                                      solidHeader = TRUE,
-                                      width=1050,
-                                      title= "Countries that have worsened",
-                                      plotOutput("involutioning"),
-                                      
-                                      selectInput("selectworse", label = "Select a country", 
-                                                  choices = list("Bahrain" = "Bahrain", "Slovenia" = "Slovenia", "Uzbekistan" = "Uzbekistan"), 
-                                                  selected = "Slovenia"),
-                                      
-                                      dataTableOutput("tabworse")
-                                      
-                                  )
-                                  
-                                ),
-                                
-                                fluidRow(
-                                  box(status = "primary",
-                                      solidHeader = TRUE,
-                                      width=1050,
-                                      title= "Countries that have improved the most",
-                                      plotOutput("evolutioning"),
-                                      
-                                      selectInput("selectbest", label = "Select a country", 
-                                                  choices = list("Bolivia" = "BOL", "Congo, Dem. Rep." = "COD", "Guinea" = "GIN", "Maldives"="MDV", "Sao Tome and Principe"="STP"), 
-                                                  selected = "COD"),
-                                      
-                                      dataTableOutput("tabimprov")
-                                      
                                   )
                                 )
-                                
-                                
-                                
                         )
-                        
-                        
-                      )
+                         )
                     )
 )
 
@@ -756,6 +742,7 @@ server <- function(input, output) {
     
   })
   
+  
   output$tabarrows <- renderDataTable({
     
     datos_na <- women[is.na(women$global_index),]
@@ -815,7 +802,57 @@ server <- function(input, output) {
     
   })
   
+  #Laws
+  output$laws <- renderDataTable({
+    
+    datos_na <- women[is.na(women$global_index),]
+    datos_no_na <- setdiff(women, datos_na)
+    
+    year_2009 <- datos_no_na %>% filter(year %in% c(2009))
+    year_2018 <- datos_no_na %>% filter(year %in% c(input$sliderboxplotlaw))
+    
+    year_2018[!(year_2018$country %in% year_2009$country),]
+    
+    #year_2018 <- year_2018 %>% filter(!(country_code=="SSD"))
+    year_2018$improvement<- year_2018$HAVING_CHILDREN - year_2009$HAVING_CHILDREN
+    year_2018$global_index_2009 <- year_2009$HAVING_CHILDREN
+    
+    for_improvement_plot <-tibble :: tibble(country = year_2018$country,global_index_selectedyear=year_2018$global_index_2009, global_index_2018 = year_2018$HAVING_CHILDREN, region=year_2018$region)
+    
+    
+    df <- for_improvement_plot %>% filter(region==input$radioRegion) %>% select(-one_of(c("region"))) %>% mutate(direction = ifelse(global_index_2018 - global_index_selectedyear >0, "up", "down")) %>% melt(id=c("country","direction"))
+    
+    df%>%select(one_of(c("country","variable","value")))
+    
+    
+  },
+  options = 
+    list(pagingType = "simple",pageLength = 10)
+  )
   
+  output$arrowsLaw <- renderPlot({
+    datos_na <- women[is.na(women$global_index),]
+    datos_no_na <- setdiff(women, datos_na)
+    
+    year_2009 <- datos_no_na %>% filter(year %in% c(2009))
+    year_2018 <- datos_no_na %>% filter(year %in% c(input$sliderboxplotlaw))
+    
+    year_2018[!(year_2018$country %in% year_2009$country),]
+    
+    #year_2018 <- year_2018 %>% filter(!(country_code=="SSD"))
+    year_2018$improvement<- year_2018$HAVING_CHILDREN - year_2009$HAVING_CHILDREN
+    year_2018$global_index_2009 <- year_2009$c(input$selectLaw)
+    
+    for_improvement_plot <-tibble :: tibble(country = year_2018$country,global_index_2009=year_2018$global_index_2009, global_index_2018 = year_2018$HAVING_CHILDREN, region=year_2018$region)
+    
+    
+    df <- for_improvement_plot %>% filter(region==input$radioRegion) %>% select(-one_of(c("region"))) %>% mutate(direction = ifelse(global_index_2018 - global_index_2009 >0, "up", "down")) %>% melt(id=c("country","direction"))
+    
+    
+    ggplot(df, aes(x=country,y=value, color=variable, group=country)) + geom_point(size=4) + geom_path(aes(color=direction), arrow = arrow()) + theme(axis.text.x = element_text(size = 10, angle = 45, hjust = 1)) 
+    
+    
+  })
   
   
 }
