@@ -918,8 +918,7 @@ server <- function(input, output) {
   
   output$stdtopics<-renderInfoBox({
     
-    datos_na <- women[is.na(women$global_index),]
-    datos_no_na <- setdiff(women, datos_na)
+    datos_no_na <- women %>% drop_na()
     
     columna <- input$selectcolumn3
     
@@ -970,8 +969,7 @@ server <- function(input, output) {
   })
   
   output$topicsRange<-renderInfoBox({
-    datos_na <- women[is.na(women$global_index),]
-    datos_no_na <- setdiff(women, datos_na)
+    datos_no_na <- women %>% drop_na()
   
     columna <- input$selectcolumn2
     
@@ -1027,8 +1025,7 @@ server <- function(input, output) {
   output$tablecountriesbyincomes <- renderTable(table(women$income_group))
   
   output$covariancetable <- renderTable({
-    datos_na <- women[is.na(women$global_index),]
-    datos_no_na <- setdiff(women, datos_na)
+    datos_no_na <- women %>% drop_na()
     datos_continuous_features <- datos_no_na %>% select_if(is.numeric)
     drop.cols <- c("year")
     datos_continuous_features <- datos_continuous_features %>% select(-drop.cols) 
@@ -1037,8 +1034,7 @@ server <- function(input, output) {
   })
   
   output$corrtable<-renderTable({
-    datos_na <- women[is.na(women$global_index),]
-    datos_no_na <- setdiff(women, datos_na)
+    datos_no_na <- women %>% drop_na()
     datos_continuous_features <- datos_no_na %>% select_if(is.numeric)
     drop.cols <- c("year")
     datos_continuous_features <- datos_continuous_features %>% select(-drop.cols) 
@@ -1048,8 +1044,7 @@ server <- function(input, output) {
   
   
   output$tablegoingplaces <- renderTable({
-    datos_na <- women[is.na(women$global_index),]
-    datos_no_na <- setdiff(women, datos_na)
+    datos_no_na <- women %>% drop_na()
     
     columna <- input$selectcolumn
     
