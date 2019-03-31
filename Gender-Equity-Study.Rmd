@@ -49,7 +49,7 @@ by_continent_2009_2018 <- gender %>%
   group_by(region, year) %>%
   summarize(meanGlobal = mean(global_index))
 
-head(by_continent_2009)
+head(by_continent_2009_2018)
 
 
 ggplot(by_continent_2009_2018, aes(x=region,y=meanGlobal,fill=factor(year)))+
@@ -72,8 +72,46 @@ Diferencias en porcentajes:
  
  Con los datos anteriores podemos decir que la región que más ha crecido en derechos para la mujer ha sido Asia del Sur, con un aumento del 8.36 puntos. Aumento todavía le quedan muchas políticas de igualdad que implantar con respecto a los países de la OECD.
  Los países de la de Medio Este y Norte de África son los que tuvieron el menor aumento en 10 años, únicamente 2.89 puntos por lo que aumenta la diferencia entre las demás regiones.
+ 
+ 
+```{r pressure, echo=FALSE}
+by_getting_married_2009_2018 <- gender %>%
+  select(`GETTING MARRIED`, region, year, global_index) %>%
+  filter(year == 2009 | year == 2018) %>%
+  group_by(region, year) %>%
+  summarize(meanGetMarried = mean(`GETTING MARRIED`))
+
+head(by_getting_married_2009_2018)
 
 
+ggplot(by_getting_married_2009_2018, aes(x=region,y=meanGetMarried,fill=factor(year)))+
+  geom_bar(stat="identity",position="dodge")+
+  geom_text(aes(label= round(meanGetMarried, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25)+
+  scale_fill_discrete(name="Año",
+                      breaks=c(1, 2),
+                      labels=c("2009", "2018"))+
+  xlab("Regiones")+ylab("Porcentaje medio")
+```
+
+
+
+```{r}
+by_continent_2009_2018_OECD <- gender %>%
+  select(region, year, country, global_index) %>%
+  filter((year == 2009 | year == 2018) & gender$region == 'High income: OECD' ) %>%
+  group_by(region, year, country) %>%
+  summarize(meanGlobal = mean(global_index))
+
+head(by_continent_2009_2018_OECD)
+
+ggplot(by_continent_2009_2018_OECD, aes(x=country,y=meanGlobal,fill=factor(year)))+
+  geom_bar(stat="identity",position="dodge")+
+  geom_text(aes(label= round(meanGlobal, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25)+
+  scale_fill_discrete(name="Año",
+                      breaks=c(1, 2),
+                      labels=c("2009", "2018"))+
+  xlab("Regiones")+ylab("Porcentaje medio")
+```
 
 ## Mejores y peores políticas de igualdad
 

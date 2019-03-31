@@ -297,18 +297,10 @@ ui <- dashboardPage(skin = "blue",
                                       dataTableOutput("tabimprov")
                                       
                                   )
-                                ),
-                                fluidRow(
-                                  status = "primary",
-                                  solidHeader = TRUE,
-                                  width=1050,
-                                  title= "Countries that have improved the most",
-                                  box(dataTableOutput("laws"))
                                 )
                                 
-                                
-                                
                         ),
+                        
                         
                         tabItem(tabName = "Laws",
                                 
@@ -805,24 +797,11 @@ server <- function(input, output) {
   #Laws
   output$laws <- renderDataTable({
     
-    datos_na <- women[is.na(women$global_index),]
-    datos_no_na <- setdiff(women, datos_na)
-    
-    year_2009 <- datos_no_na %>% filter(year %in% c(2009))
-    year_2018 <- datos_no_na %>% filter(year %in% c(input$sliderboxplotlaw))
-    
-    year_2018[!(year_2018$country %in% year_2009$country),]
-    
-    #year_2018 <- year_2018 %>% filter(!(country_code=="SSD"))
-    year_2018$improvement<- year_2018$HAVING_CHILDREN - year_2009$HAVING_CHILDREN
-    year_2018$global_index_2009 <- year_2009$HAVING_CHILDREN
-    
-    for_improvement_plot <-tibble :: tibble(country = year_2018$country,global_index_selectedyear=year_2018$global_index_2009, global_index_2018 = year_2018$HAVING_CHILDREN, region=year_2018$region)
-    
-    
-    df <- for_improvement_plot %>% filter(region==input$radioRegion) %>% select(-one_of(c("region"))) %>% mutate(direction = ifelse(global_index_2018 - global_index_selectedyear >0, "up", "down")) %>% melt(id=c("country","direction"))
-    
-    df%>%select(one_of(c("country","variable","value")))
+    by_getting_married_2009_2018 <- women %>%
+      select(input$selectLaw, region, year, global_index) %>%
+      filter(year == 2009 | year == input$sliderboxplotlaw) %>%
+      group_by(region, year) %>%
+      summarize(meanGetMarried = mean(input$selectLaw))
     
     
   },
@@ -831,25 +810,10 @@ server <- function(input, output) {
   )
   
   output$arrowsLaw <- renderPlot({
-    datos_na <- women[is.na(women$global_index),]
-    datos_no_na <- setdiff(women, datos_na)
-    
-    year_2009 <- datos_no_na %>% filter(year %in% c(2009))
-    year_2018 <- datos_no_na %>% filter(year %in% c(input$sliderboxplotlaw))
-    
-    year_2018[!(year_2018$country %in% year_2009$country),]
-    
-    #year_2018 <- year_2018 %>% filter(!(country_code=="SSD"))
-    year_2018$improvement<- year_2018$HAVING_CHILDREN - year_2009$HAVING_CHILDREN
-    year_2018$global_index_2009 <- year_2009$c(input$selectLaw)
-    
-    for_improvement_plot <-tibble :: tibble(country = year_2018$country,global_index_2009=year_2018$global_index_2009, global_index_2018 = year_2018$HAVING_CHILDREN, region=year_2018$region)
-    
-    
-    df <- for_improvement_plot %>% filter(region==input$radioRegion) %>% select(-one_of(c("region"))) %>% mutate(direction = ifelse(global_index_2018 - global_index_2009 >0, "up", "down")) %>% melt(id=c("country","direction"))
-    
-    
-    ggplot(df, aes(x=country,y=value, color=variable, group=country)) + geom_point(size=4) + geom_path(aes(color=direction), arrow = arrow()) + theme(axis.text.x = element_text(size = 10, angle = 45, hjust = 1)) 
+    ggplot(by_getting_married_2009_2018, aes(x=region,y=meanGetMarried,fill=factor(year)))+
+      geom_bar(stat="identity",position="dodge")+
+      geom_text(aes(label= round(meanGetMarried, digits = 2)), position=position_dodge(width=0.9), vjust=-0.25)+
+      xlab("Regiones")+ylab("Porcentaje medio")
     
     
   })
