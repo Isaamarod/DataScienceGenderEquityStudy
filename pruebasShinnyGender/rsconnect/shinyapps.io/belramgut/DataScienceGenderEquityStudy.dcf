@@ -1,0 +1,13 @@
+name: DataScienceGenderEquityStudy
+title: DataScienceGenderEquityStudy
+username:
+account: belramgut
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 827343
+bundleId: 1978355
+url: https://belramgut.shinyapps.io/DataScienceGenderEquityStudy/
+when: 1554113428.93237
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: ar.R|dat_boxplot_outliers2.csv
